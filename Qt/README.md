@@ -17,6 +17,8 @@ Date(Latest): 2024-05-23
 
 - [5.완성본 설치: Qt 맵 생성 프로그램 설치 매뉴얼](#5-완성본-설치-qt-맵-생성-프로그램-설치-매뉴얼)
 
+- [6.이미지 크기 이슈](#)
+
 
 ## 1. 관리자 페이지(Qt,PySide6 + ROS2)
 
@@ -164,3 +166,38 @@ Qt의 키보드(또는 버튼)의 인터럽트를 이용하여 Twist값을 Publi
         call install\local_setup.bat
         ros2 run map_draw app1
         ```
+
+
+## 6. 이미지 크기 이슈
+
+<img src="./img/befoe.PNG" width=500px>
+
+<img src="./img/Afer.PNG" width=500px>
+
+상단: 적용 전
+
+하단: 적용 후
+
+Qt를 사용하면서 이미지 크기를 조정하는데 이슈가 있었음.
+
+Qt에서 제공하는 fitInView()메소드를 이용하면 오류가 발생한다.
+
+직접 이미지의 크기를 리사이즈 해야한다.
+
+이때, 주의할 점은 QGraphicViews의 테두리 1px씩 차지 하기 때문에 적어도 3이상의 작은 사이즈를 기준으로 resize해야 한다.
+
+```python
+view_width_2 = self.graphicsView_2.width() - 3
+view_height_2 = self.graphicsView_2.height() - 3
+
+scale_factor2 = min(view_width_2 / width_2, view_height_2 / height_2)
+#
+# # Scale the scene to fit the image into QGraphicsView
+self.graphicsView_2.scale(scale_factor2, scale_factor2)
+
+self.graphicsView_2.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+self.graphicsView_2.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+
+```
+
