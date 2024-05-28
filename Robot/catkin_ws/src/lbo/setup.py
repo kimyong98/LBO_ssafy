@@ -25,6 +25,12 @@ setup(
             'tt = lbo.tt:main',
             'lidar = lbo.lidar_test:main',
             'blue = lbo.bluetooth:main',
+            'user = lbo.user_input:main',
+            'camera_sub = lbo.camera_sub:main',
+            'handle_odom = lbo.handle_odom:main',
+            'handle_odom2 = lbo.handle_odom2:main',
+            'tt_map = lbo.tt_map:main',
+            'lidar_save = lbo.lidar_save:main',
         ],
     },
 )

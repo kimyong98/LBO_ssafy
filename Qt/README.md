@@ -6,8 +6,19 @@ Date(Latest): 2024-05-23
 요약: 관리자 페이지 개발 
 
 
+## 목록
+- [1. 관리자 페이지(Qt,PySide6 + ROS2)](#1-관리자-페이지qtpyside6--ros2)
 
-# 관리자 페이지(Qt,PySide6 + ROS2)
+- [2. 포팅 메뉴얼 (Qt, PySide6)](#2-포팅-메뉴얼-qt-pyside6)
+
+- [3. 포팅 메뉴얼 (ROS2)](#3-포팅-메뉴얼-ros2)
+
+- [4. 조작](#4-조작)
+
+- [5.완성본 설치: Qt 맵 생성 프로그램 설치 매뉴얼](#5-완성본-설치-qt-맵-생성-프로그램-설치-매뉴얼)
+
+
+## 1. 관리자 페이지(Qt,PySide6 + ROS2)
 
 
 <img src="./img/QT.PNG" width="500px">
@@ -15,8 +26,9 @@ Date(Latest): 2024-05-23
 
 구입 후 초반에 관리자가 쉽게 맵핑이 가능하도록 만든 원격조작 툴이다.
 
+<br><br>
 
-## Setting 과정(Qt, PySide6)
+## 2. 포팅 메뉴얼 (Qt, PySide6)
 
 
 파이참을 설치한다. (파이썬이 자동으로 설치되며, 가상환경도 스스로 만든다.)
@@ -66,7 +78,9 @@ if __name__ == '__main__':
     app.exec()
 ```
 
-## Setting 과정(ROS2)
+<br><br>
+
+## 3. 포팅 메뉴얼 (ROS2)
 
 아무 폴더 위치에서 아래 지시사항을 수행한다.
 
@@ -101,10 +115,11 @@ pip install opencv-contrib-python
 pip install opencv-python
 ```
 
-## 조작
+<br><br>
 
+## 4. 조작
 
-사진 예정
+<img src="./img/QT.PNG" width="500px">
 
 위 사진처럼 왼쪽에 카메라 사진, 오른쪽에 맵의 사진을 띄운다.
 
@@ -114,7 +129,9 @@ pip install opencv-python
 
 Qt의 키보드(또는 버튼)의 인터럽트를 이용하여 Twist값을 Publish한다. 이를 통해 로봇의 조작이 가능케 한다.
 
-### Qt 맵 생성 프로그램 설치 매뉴얼
+<br><br>
+
+## 5. 완성본 설치: Qt 맵 생성 프로그램 설치 매뉴얼
 
 ---
 

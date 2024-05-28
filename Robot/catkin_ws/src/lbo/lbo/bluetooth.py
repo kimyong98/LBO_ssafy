@@ -1,6 +1,7 @@
-import rclpy
+import rclpy, json
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import String, Float64
+from sensor_msgs.msg import Imu
 import threading
 from bluetooth import *
 
@@ -9,6 +10,12 @@ class BluetoothClientNode(Node):
         super().__init__('bluetooth_client')
         self.sock = None
         self.buf_size = 1024
+
+        self.uwb_pub = self.create_publisher(Float64, 'uwb', 10)
+        self.imu_pub = self.create_publisher(Imu, 'handle_imu', 10)
+
+        self.imu_msg = Imu()
+        self.imu_msg.header.frame_id = 'imu_link'
 
     def input_and_send(self):
         self.get_logger().info("Type something")
@@ -21,10 +28,36 @@ class BluetoothClientNode(Node):
 
     def rx_and_echo(self):
         while True:
-            data = self.sock.recv(self.buf_size)
-            if data:
-                self.get_logger().info(data.decode('utf-8'))
+            data_string = ""
 
+            while True:
+                ret = data_string.find('@')
+                if ret != -1:
+                    break
+                temp = self.sock.recv(self.buf_size).decode('utf-8')
+                data_string += temp
+
+            data_string = data_string[:-1]
+
+            if data_string:
+                data_json = json.loads(data_string)
+
+                uwb_msg = Float64()
+                uwb_msg.data = float(data_json["data"]["uwb"])
+                self.uwb_pub.publish(uwb_msg)
+
+                self.imu_msg.linear_acceleration.x = float(data_json["data"]["imu"]["acc"]["x"])
+                self.imu_msg.linear_acceleration.y = float(data_json["data"]["imu"]["acc"]["y"])
+                self.imu_msg.linear_acceleration.z = float(data_json["data"]["imu"]["acc"]["z"])
+
+                self.imu_msg.orientation.x = float(data_json["data"]["imu"]["gyro"]["x"])
+                self.imu_msg.orientation.y = float(data_json["data"]["imu"]["gyro"]["y"])
+                self.imu_msg.orientation.z = float(data_json["data"]["imu"]["gyro"]["z"])
+                self.imu_msg.orientation.w = float(data_json["data"]["imu"]["gyro"]["w"])
+
+                self.imu_msg.header.stamp = rclpy.clock.Clock().now().to_msg()
+                self.imu_pub.publish(self.imu_msg)
+                
     def bluetooth_communication(self):
         # MAC address of ESP32
         addr = "08:D1:F9:D7:94:8A"

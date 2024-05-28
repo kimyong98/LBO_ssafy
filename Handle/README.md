@@ -9,6 +9,10 @@ Date(Latest): 2024-05-23
 
 ## 목록
 - [1. 들어가기 앞서](#1-들어가기-앞서)
+    - [1-1. 손잡이를 만들게 된 이유](#1-1-손잡이를-만들게-된-이유)
+    - [1-2. 포팅 메뉴얼](#1-2-포팅-메뉴얼)
+    - [1-2-1. IDE 설치 및 보드 인식](#1-2-1-ide-설치-및-보드-인식)
+    - [1-2-2. 라이브러리 설치](#1-2-2-라이브러리-설치)
 
 - [2. Handle 제작도 및 제작품](#2-handle-제작도-및-제작품)
 
@@ -37,9 +41,41 @@ Date(Latest): 2024-05-23
 
 ## 1. 들어가기 앞서
 
-***손잡이를 만들게 된 이유***
+### 1-1. 손잡이를 만들게 된 이유
+---
 
 안내 로봇과 함께 시각 장애인이 실내를 이동하는데 큰 어려움이 없도록 손잡이(조작기)를 만들었습니다.
+
+<br><br>
+
+### 1-2. 포팅 메뉴얼
+---
+
+#### 1-2-1. IDE 설치 및 보드 인식
+
+https://www.arduino.cc/en/software 에서 운영체제에 맞는 파일을 다운/설치한다.
+
+<img src="./img/ESP32DEV.PNG" width=500px>
+
+처음 보드를 연결해도 unknown으로 인식된다.
+
+사진과 같이 직접 인식시켜줘야 한다.
+
+#### 1-2-2. 라이브러리 설치
+
+<img src="./img/MPU9250.PNG" width=500px>
+
+IMU 센서
+
+<img src="./img/ESP32Servo.PNG" width=500px>
+
+Servo Motor
+
+https://github.com/F-Army/arduino-dw1000-ng
+
+<img src="./img/ZIPADD.PNG" width=500px>
+
+UWB (사진처럼 zip 파일로 라이브러리 추가 작업 필요)
 
 <br><br>
 
@@ -54,6 +90,9 @@ Date(Latest): 2024-05-23
 보드: ESP32 (풀네임: ESP WROOM-32) 3개
 
 UWB(DWM1000), IMU(MPU9250), Servo motor(MG996R), Button(없음)
+
+<img src="./img/Handle_HW.png" width="500px">
+
 
 <br><br>
 
@@ -130,32 +169,48 @@ Handle
 
 ---
 
+- 실내에서 정밀한 사용자 위치 추정을 위해 안내 로봇과 안내 손잡이의 거리를 측정
+- 두 기기에 UWB 통신 모듈(DWM1000)을 설치하고 ToF(Time if Flight)방식으로 거리를 측정
 
+- 기기 구성 및 거리 측정 방법
+    
+    <aside>
+    💡 거리 측정 방식으로 UWB 기술을 사용한 이유
+    
+    - 해당 기술은 cm단위의 거리 측정이 가능하며, 이는 타 통신방식(블루투스, Wifi) 대비 10배 이상의 정밀도를 보임
+    </aside>
+    
+    - 각 기기에는 통신 모듈(DWM1000)이 ESP32 MCU보드에 연결된 상태로 설치
+    - 아래 방식과 같이 두 모듈은 서로 신호를 주고 받음
+        - DS-TWR(Double-Sided Two-Way Ranging)
+            
+            <img src="./img/DS_TWR1.png" width="500px">
+            
+            [https://www.jkiees.org/archive/view_article?pid=jkiees-33-1-1](https://www.jkiees.org/archive/view_article?pid=jkiees-33-1-1)
+            
+    - 통신모듈은 신호를 받은 시점과 보내는 시점을 ESP32에 SPI 통신을 통해 전송
+    - ESP32는 각 시점에 대한 정보를 가지고 아래의 수식을 통해 두 기기간 거리를 연산
+        - ToF(Time of Flight) 시간 계산 공식
+            
+            <img src="./img/DS_TWR2.png" width="500px">
+            
+            [https://www.jkiees.org/archive/view_article?pid=jkiees-33-1-1](https://www.jkiees.org/archive/view_article?pid=jkiees-33-1-1)
+            
+        
+- 측정된 거리는 Main ESP32에 UART통신으로 전송하여 거리 정보 외 IMU센서, 버튼 상태 등의 정보와 결합하여 안내 로봇과 블루투스로 전달
+    
+    <aside>
+    💡 ESP32를 2개로 분리한 이유
+    
+    - 안내 손잡이는 FreeRTOS에서 멀티태스킹 형태로 구현
+    - IMU센서, 거리, 버튼 상태 등 여러 정보를 각각의 Task가 취득하여 블루투스로 전달
+    - UWB 통신의 원리가 다회의 신호 송수신을 통해 신호의 파형을 구형파 형태로 변환해야 하기 때문에 하나의 Task 단위에서 측정하는 것이 불가능
+    - 따라서, UWB 거리 측정을 위한 별도의 MCU보드를 두어야 해서 ESP32를 2개로 분리
+    </aside>
+    
+<br>
 
-
-<img src="./img/Untitled_1.png" width="500px">
-
-이미지 출처: https://infograph.tistory.com/214
-
-그림과 같이 **전자기파**의 이동시간을 통해 거리를 측정합니다.
-
-```markdown
-***목적***
-
-측정된 거리는 블루투스 통신으로 안내 로봇에게 전달합니다. 거리는 시각장애인의 정확한 위치 판단(추측)에 이용됩니다.
-```
-
-ESP32_Total과 ESP32_Tag을 UART로 연결합니다. 
-
-UART를 통해 distance 값을 ESP32_Tag -> ESP32_Total 전달합니다.
-
-multi tasking을 이용해 uart의 메세지 큐의 가장 최신 distance 값을 가져옵니다.
-
-(uart통신의 수신은 인터럽트를 사용하기 힘듭니다. RX pin을 인터럽트로 받기 때문에 bit마다 인터럽트가 발생합니다. 따라서 인터럽트 오버플로우가 발생할 가능성이 큽니다)
-
-사용한 라이브러리의 한계(가끔 Anchor의 Respond가 정상적이지 않아 무한루프가 되는 이슈가 있음)로 **WatchDog**를 사용했습니다.
-**WatchDog**은 **FreeRTOS**의 기능으로 Task가 정상 작동하는지 감시하는 기능입니다. (***ESP***-***IDF FreeRTOS*** is a ***FreeRTOS*** implementation based on Vanilla ***FreeRTOS*** v10.5.1)
-WatchDog은 일종의 타이머(Timer)로 타겟 Task에 N초 이상 타이머 Reset을 하지 않으면(N초 → 0초로 줄어듭니다. 타이머를 Reset하면 다시 N초가 됩니다) 보드 자체를 Reset합니다.
+- Watchdog 기능을 추가하여 거리가 일정 시간 이상 측정되지 않을 때, 하드웨어 리셋하여 측정 중 간헐적 끊김 현상 개선
 
 <br><br>
 
